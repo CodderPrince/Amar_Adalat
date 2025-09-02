@@ -1,8 +1,8 @@
-// supabase_list.dart
 import 'package:flutter/material.dart';
 import '../main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../screens/detail_screen.dart'; // Import DetailScreen
+import 'dart:math';
 
 class SupabaseListScreen extends StatefulWidget {
   final String tableName;
@@ -10,7 +10,7 @@ class SupabaseListScreen extends StatefulWidget {
   final String? subtitleField;
   final String appBarTitle;
   final Function(String, String, bool)? updateFavoriteState;
-  final Map<String, bool>? favoriteStates;
+  final Map<String, dynamic>? favoriteStates;
 
   const SupabaseListScreen({
     required this.tableName,
@@ -46,7 +46,8 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
 
       // Initialize 'isFavorited' based on HomeScreen's state, or to false if not found.
       for (var item in data) {
-        item['isFavorited'] = widget.favoriteStates?['${widget.tableName}-${item['id']}'] ?? false;
+        final key = '${widget.tableName}-${item['id']}';
+        item['isFavorited'] = widget.favoriteStates?[key]?['isFavorite'] ?? false;
       }
       _filterData();
     } catch (e) {
@@ -85,6 +86,7 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
   void _toggleFavorite(Map<String, dynamic> item) {
     final itemId = item['id'].toString();
     final isCurrentlyFavorite = item['isFavorited'] as bool? ?? false; // Safely cast to bool
+    final key = '${widget.tableName}-${itemId}';
 
     // Toggle the local state.
     setState(() {
@@ -93,6 +95,17 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
 
     // Update the HomeScreen's state using the callback.
     widget.updateFavoriteState?.call(widget.tableName, itemId, !isCurrentlyFavorite);
+  }
+
+  Color _getRandomLightColor() {
+    final Random random = Random();
+    // Generate a color with high brightness (close to white)
+    return Color.fromARGB(
+      255,
+      200 + random.nextInt(56), // Red: 200-255
+      200 + random.nextInt(56), // Green: 200-255
+      200 + random.nextInt(56), // Blue: 200-255
+    );
   }
 
 
@@ -133,33 +146,40 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
                 itemCount: filteredData.length,
                 itemBuilder: (context, i) {
                   final item = filteredData[i];
-                  return ListTile(
-                    title: Text(item[widget.titleField] ?? 'No title'),
-                    subtitle: widget.subtitleField != null
-                        ? Text(
-                      item[widget.subtitleField!] ??
-                          'No description',
-                    )
-                        : null,
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            item['isFavorited'] == true
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: item['isFavorited'] == true ? Colors.red : null,
-                          ),
-                          onPressed: () => _toggleFavorite(item),
-                        ),
-                        if (item['link'] != null &&
-                            (item['link'] as String).isNotEmpty)
+                  final key = '${widget.tableName}-${item['id']}';
+                  final color = widget.favoriteStates?[key]?['color'] as Color? ?? _getRandomLightColor();
+                  return Card( // Wrap ListTile in a Card
+                    color: color,
+                    elevation: 2,
+                    margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: ListTile(
+                      title: Text(item[widget.titleField] ?? 'No title', style: TextStyle(color: Colors.black),),
+                      subtitle: widget.subtitleField != null
+                          ? Text(
+                        item[widget.subtitleField!] ??
+                            'No description',  style: TextStyle(color: Colors.grey[700]),
+                      )
+                          : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           IconButton(
-                            icon: const Icon(Icons.open_in_new),
-                            onPressed: () => _launchLink(item['link']),
+                            icon: Icon(
+                              item['isFavorited'] == true
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: item['isFavorited'] == true ? Colors.red : null,
+                            ),
+                            onPressed: () => _toggleFavorite(item),
                           ),
-                      ],
+                          if (item['link'] != null &&
+                              (item['link'] as String).isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.open_in_new),
+                              onPressed: () => _launchLink(item['link']),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 },

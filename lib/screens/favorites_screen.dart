@@ -1,17 +1,15 @@
-// favorites_screen.dart
 import 'package:flutter/material.dart';
 import '../main.dart';
 import 'detail_screen.dart';
-import 'package:collection/collection.dart'; // Import the collection package
+import 'package:collection/collection.dart';
 
 class FavoritesScreen extends StatelessWidget {
-  final Map<String, bool> favoriteStates;
+  final Map<String, dynamic> favoriteStates;
 
   const FavoritesScreen({Key? key, required this.favoriteStates}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Combine all data sources (rights, legal_aids, legal_guides).
     return Scaffold(
       appBar: AppBar(title: const Text('Favorites')),
       body: FutureBuilder<List<List<Map<String, dynamic>>>>(
@@ -29,7 +27,7 @@ class FavoritesScreen extends StatelessWidget {
             // Flatten the list of lists into a single list
             final allData = snapshot.data!.flattened.toList();
             // Filter items based on the favoriteStates
-            final favoriteItems = allData.where((item) => favoriteStates['${item['table_name']}-${item['id']}'] == true).toList();
+            final favoriteItems = allData.where((item) => favoriteStates['${item['table_name']}-${item['id']}']?['isFavorite'] == true).toList();
 
             if (favoriteItems.isEmpty) {
               return const Center(child: Text('No favorites yet.'));
@@ -39,22 +37,30 @@ class FavoritesScreen extends StatelessWidget {
               itemCount: favoriteItems.length,
               itemBuilder: (context, index) {
                 final item = favoriteItems[index];
-                return ListTile(
-                  title: Text(item['title'] ?? item['name'] ?? "No Title"), // Handle different title fields
-                  subtitle: Text(item['description'] ?? item['address'] ?? "No Description"), // Handle different description fields
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetailsScreen(
-                          title: item['title'] ?? item['name'] ?? "",
-                          subtitle: item['subtitle'],
-                          description: item['description'] ?? item['address'],
-                          link: item['link'],
+                final key = '${item['table_name']}-${item['id']}';
+                final color = favoriteStates[key]?['color'] as Color? ?? Colors.white;
+
+                return Card(
+                  color: color, // Apply stored color
+                  elevation: 2,
+                  margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: ListTile(
+                    title: Text(item['title'] ?? item['name'] ?? "No Title", style: TextStyle(color: Colors.black),),
+                    subtitle: Text(item['description'] ?? item['address'] ?? "No Description", style: TextStyle(color: Colors.grey[700]),),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DetailsScreen(
+                            title: item['title'] ?? item['name'] ?? "",
+                            subtitle: item['subtitle'],
+                            description: item['description'] ?? item['address'],
+                            link: item['link'],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             );
@@ -64,7 +70,6 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  // Helper function to fetch data from a table
   Future<List<Map<String, dynamic>>> fetchData(String tableName) async {
     final response = await supabase.from(tableName).select('*').withConverter((data) {
       return (data as List).cast<Map<String, dynamic>>().map((item) {

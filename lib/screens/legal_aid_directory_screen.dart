@@ -5,19 +5,25 @@ import '../widgets/supabase_list.dart';
 class LegalAidDirectoryScreen extends StatelessWidget {
   final String tableName;
   final Function(String, String, bool)? updateFavoriteState;
-  final Map<String, bool>? favoriteStates;
+  final Map<String, dynamic>? favoriteStates;
 
   const LegalAidDirectoryScreen({Key? key, required this.tableName, this.updateFavoriteState, this.favoriteStates}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Extract only the boolean values from the favoriteStates map
+    Map<String, bool> extractedFavoriteStates = {};
+    favoriteStates?.forEach((key, value) {
+      extractedFavoriteStates[key] = value is Map ? (value['isFavorite'] as bool? ?? false) : value as bool? ?? false;
+    });
+
     return SupabaseListScreen(
       tableName: tableName,
       titleField: 'name',
       subtitleField: 'address',
       appBarTitle: 'Legal Aid Directory',
       updateFavoriteState: updateFavoriteState,
-      favoriteStates: favoriteStates,
+      favoriteStates: extractedFavoriteStates,
     );
   }
 }

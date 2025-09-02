@@ -8,63 +8,54 @@ class DetailsScreen extends StatelessWidget {
   final String? link;
 
   const DetailsScreen({
+    Key? key,
     required this.title,
     this.subtitle,
     this.description,
     this.link,
-    super.key,
-  });
-
-  Future<void> _openLink(BuildContext context) async {
-    if (link == null || link!.isEmpty) return;
-
-    final uri = Uri.parse(link!);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot open this link')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to open link')),
-      );
-    }
-  }
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: SingleChildScrollView(
+      appBar: AppBar(
+        title: Text(title),
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (subtitle != null && subtitle!.isNotEmpty)
+            Text(
+              title,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            if (subtitle != null)
               Text(
                 subtitle!,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
-            if (subtitle != null && subtitle!.isNotEmpty)
-              const SizedBox(height: 12),
-            if (description != null && description!.isNotEmpty)
+            SizedBox(height: 16),
+            if (description != null)
               Text(
                 description!,
-                style: const TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16),
               ),
-            if (description != null && description!.isNotEmpty)
-              const SizedBox(height: 20),
+            SizedBox(height: 24),
             if (link != null && link!.isNotEmpty)
-              ElevatedButton.icon(
-                onPressed: () => _openLink(context),
-                icon: const Icon(Icons.link),
-                label: const Text('Open Link'),
+              ElevatedButton(
+                onPressed: () async {
+                  final uri = Uri.parse(link!);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Could not open link')),
+                    );
+                  }
+                },
+                child: Text('Open Link'),
               ),
           ],
         ),

@@ -1,103 +1,76 @@
+// favorites_screen.dart
 import 'package:flutter/material.dart';
 import '../main.dart';
 import 'detail_screen.dart';
+import 'package:collection/collection.dart'; // Import the collection package
 
-class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({Key? key}) : super(key: key);
+class FavoritesScreen extends StatelessWidget {
+  final Map<String, bool> favoriteStates;
 
-  @override
-  _FavoritesScreenState createState() => _FavoritesScreenState();
-}
-
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Map<String, dynamic>> favoritesList = [];
-  bool _isLoading = true;
-  String? userId;
-
-  @override
-  void initState() {
-    super.initState();
-    userId = supabase.auth.currentUser?.id;
-    if (userId != null) _fetchFavorites();
-  }
-
-  Future<void> _fetchFavorites() async {
-    if (userId == null) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final favs = await supabase
-          .from('favorites')
-          .select('item_id, table_name')
-          .eq('user_id', userId as Object);
-
-      final temp = await Future.wait(
-        (favs as List).map((fav) async {
-          final item = await supabase
-              .from(fav['table_name'])
-              .select('*')
-              .eq('id', fav['item_id'])
-              .maybeSingle();
-          return item as Map<String, dynamic>?;
-        }).whereType<Future<Map<String, dynamic>>>(),
-      );
-
-      setState(() => favoritesList = temp);
-    } catch (e) {
-      print('Error fetching favorites: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to load favorites')),
-      );
-    }
-
-    setState(() => _isLoading = false);
-  }
+  const FavoritesScreen({Key? key, required this.favoriteStates}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (userId == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Favorites')),
-        body: const Center(child: Text('Please log in to view your favorites.')),
-      );
-    }
-
+    // Combine all data sources (rights, legal_aids, legal_guides).
     return Scaffold(
       appBar: AppBar(title: const Text('Favorites')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : favoritesList.isEmpty
-          ? const Center(child: Text('No favorites yet.'))
-          : RefreshIndicator(
-        onRefresh: _fetchFavorites,
-        child: ListView.builder(
-          itemCount: favoritesList.length,
-          itemBuilder: (context, index) {
-            final item = favoritesList[index];
-            return ListTile(
-              title: Text(item['title'] ?? ""),
-              subtitle: Text(item['description'] ?? ""),
-              trailing: item['link'] != null
-                  ? const Icon(Icons.open_in_new)
-                  : null,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DetailsScreen(
-                      title: item['title'] ?? "",
-                      subtitle: item['subtitle'],
-                      description: item['description'],
-                      link: item['link'],
-                    ),
-                  ),
+      body: FutureBuilder<List<List<Map<String, dynamic>>>>(
+        future: Future.wait([
+          fetchData('rights'),
+          fetchData('legal_aids'),
+          fetchData('legal_guides'),
+        ]),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error loading favorites: ${snapshot.error}'));
+          } else {
+            // Flatten the list of lists into a single list
+            final allData = snapshot.data!.flattened.toList();
+            // Filter items based on the favoriteStates
+            final favoriteItems = allData.where((item) => favoriteStates['${item['table_name']}-${item['id']}'] == true).toList();
+
+            if (favoriteItems.isEmpty) {
+              return const Center(child: Text('No favorites yet.'));
+            }
+
+            return ListView.builder(
+              itemCount: favoriteItems.length,
+              itemBuilder: (context, index) {
+                final item = favoriteItems[index];
+                return ListTile(
+                  title: Text(item['title'] ?? item['name'] ?? "No Title"), // Handle different title fields
+                  subtitle: Text(item['description'] ?? item['address'] ?? "No Description"), // Handle different description fields
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailsScreen(
+                          title: item['title'] ?? item['name'] ?? "",
+                          subtitle: item['subtitle'],
+                          description: item['description'] ?? item['address'],
+                          link: item['link'],
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             );
-          },
-        ),
+          }
+        },
       ),
     );
+  }
+
+  // Helper function to fetch data from a table
+  Future<List<Map<String, dynamic>>> fetchData(String tableName) async {
+    final response = await supabase.from(tableName).select('*').withConverter((data) {
+      return (data as List).cast<Map<String, dynamic>>().map((item) {
+        return item..addAll({'table_name': tableName});
+      }).toList();
+    });
+    return response;
   }
 }

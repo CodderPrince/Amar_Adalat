@@ -1,11 +1,28 @@
+// home_screen.dart
 import 'package:flutter/material.dart';
 import 'rights_screen.dart';
 import 'legal_aid_directory_screen.dart';
 import 'legal_guides_screen.dart';
 import 'report_screen.dart';
 import 'favorites_screen.dart';
+import 'admin_view_screen.dart'; // Import the AdminViewScreen
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // This map will hold the favorite status for each item, keyed by a unique identifier
+  Map<String, bool> favoriteStates = {};
+
+  // Callback function to update the favorite state from SupabaseListScreen
+  void updateFavoriteState(String tableName, String itemId, bool isFavorite) {
+    setState(() {
+      favoriteStates['$tableName-$itemId'] = isFavorite;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +40,7 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.gavel,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => RightsScreen()),
+                MaterialPageRoute(builder: (context) => RightsScreen(tableName: 'rights', updateFavoriteState: updateFavoriteState, favoriteStates: favoriteStates)),
               ),
             ),
             _buildHomeCard(
@@ -32,7 +49,7 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.people,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LegalAidDirectoryScreen()),
+                MaterialPageRoute(builder: (context) => LegalAidDirectoryScreen(tableName: 'legal_aids', updateFavoriteState: updateFavoriteState, favoriteStates: favoriteStates)),
               ),
             ),
             _buildHomeCard(
@@ -41,7 +58,7 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.menu_book,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LegalGuidesScreen()),
+                MaterialPageRoute(builder: (context) => LegalGuidesScreen(tableName: 'legal_guides', updateFavoriteState: updateFavoriteState,  favoriteStates: favoriteStates)),
               ),
             ),
             _buildHomeCard(
@@ -59,7 +76,16 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.favorite,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
+                MaterialPageRoute(builder: (context) => FavoritesScreen(favoriteStates: favoriteStates)),
+              ),
+            ),
+            _buildHomeCard(
+              context,
+              title: 'Admin View',
+              icon: Icons.settings,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminViewScreen()),
               ),
             ),
           ],

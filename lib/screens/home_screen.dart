@@ -1,5 +1,6 @@
 // home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:ptib1/style/myAppBar.dart';
 import 'dart:math';
 import 'rights_screen.dart';
 import 'legal_aid_directory_screen.dart';
@@ -75,7 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Amar Adalat'), centerTitle: true),
+      //appBar: AppBar(title: Text('Amar Adalat'), centerTitle: true),
+      appBar: MyAppBar18(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Padding(
@@ -87,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             HomeCard(
               title: 'Fundamental Rights',
-              icon: Icons.gavel,
+              icon: Icons.arrow_circle_right,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(

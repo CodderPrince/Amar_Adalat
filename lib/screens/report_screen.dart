@@ -6,6 +6,8 @@ import '../main.dart';
 import 'package:image_picker/image_picker.dart'; // Import image_picker
 
 class ReportScreen extends StatefulWidget {
+  const ReportScreen({Key? key}) : super(key: key);
+
   @override
   _ReportScreenState createState() => _ReportScreenState();
 }

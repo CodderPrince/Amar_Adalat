@@ -74,12 +74,22 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
       return;
     }
     final uri = Uri.parse(link);
+    debugPrint('*** Attempting to launch URL: $link ***'); // VERY IMPORTANT DEBUG LINE
     try {
-      if (!await canLaunchUrl(uri)) throw 'Cannot launch $link';
+      if (!await canLaunchUrl(uri)) {
+        debugPrint('*** URL_LAUNCHER: Cannot launch $link ***'); // DEBUG
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open link: No app found to handle URL.')), // More specific message
+        );
+        return;
+      }
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+      debugPrint('*** URL_LAUNCHER: Successfully launched $link ***'); // DEBUG
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not open link')));
+      debugPrint('*** URL_LAUNCHER ERROR for $link: $e ***'); // DEBUG
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to open link: $e')), // Shows the actual error
+      );
     }
   }
 

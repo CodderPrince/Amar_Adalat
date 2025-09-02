@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:ptib1/style/myAppBar.dart';
 import 'dart:math';
+import 'chatbot_screen.dart';
 import 'rights_screen.dart';
 import 'legal_aid_directory_screen.dart';
 import 'legal_guides_screen.dart';
@@ -162,6 +163,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 backgroundColor: Colors.brown[700]!,
                 textColor: Colors.white
+            ),
+            HomeCard(
+              title: 'Chatbot',
+              icon: Icons.chat, // Choose an appropriate icon
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+              ),
+              backgroundColor: Colors.teal[700]!, // Dark teal color
+              textColor: Colors.white,
             ),
           ],
         ),

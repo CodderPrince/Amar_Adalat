@@ -8,6 +8,8 @@ import 'report_screen.dart';
 import 'favorites_screen.dart';
 import 'admin_view_screen.dart';
 import '../widgets/card_item.dart';
+import 'auth_screen.dart';
+import '../services/favorites_service.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,16 +19,44 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Store favorite status and color
   Map<String, dynamic> favoriteStates = {};
+  bool _isLoading = true;
 
-  // Callback function to update the favorite state and color
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialFavoriteStates();
+  }
+
+  Future<void> _loadInitialFavoriteStates() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      // Load all favorites for current user and put in memory to access syncrounously.
+      final favorites = await FavoritesService().fetchFavorites();
+      for (var fav in favorites) {
+        favoriteStates['${fav['table_name']}-${fav['item_id']}'] = {
+          'isFavorite': true,
+          'color': _getRandomLightColor(),
+        };
+      }
+    } catch (error) {
+      print('Error loading initial favorites: $error');
+      // Optionally show an error message to the user
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Callback function to update the favorite state from SupabaseListScreen
   void updateFavoriteState(String tableName, String itemId, bool isFavorite) {
     final key = '$tableName-$itemId';
     setState(() {
       if (isFavorite) {
-        // Generate and store random color
         favoriteStates[key] = {'isFavorite': true, 'color': _getRandomLightColor()};
       } else {
-        // Remove if not a favorite
         favoriteStates.remove(key);
       }
     });
@@ -46,7 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Amar Adalat'), centerTitle: true),
-      body: Padding(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(
           crossAxisCount: 2,
@@ -58,7 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.gavel,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => RightsScreen(tableName: 'rights', updateFavoriteState: updateFavoriteState, favoriteStates: favoriteStates)),
+                MaterialPageRoute(
+                    builder: (context) => RightsScreen(
+                        tableName: 'rights',
+                        updateFavoriteState: updateFavoriteState,
+                        favoriteStates: favoriteStates)),
               ),
               backgroundColor: Colors.blue[700]!, // Dark blue color
             ),
@@ -67,7 +103,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.people,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LegalAidDirectoryScreen(tableName: 'legal_aids', updateFavoriteState: updateFavoriteState, favoriteStates: favoriteStates)),
+                MaterialPageRoute(
+                    builder: (context) => LegalAidDirectoryScreen(
+                        tableName: 'legal_aids',
+                        updateFavoriteState: updateFavoriteState,
+                        favoriteStates: favoriteStates)),
               ),
               backgroundColor: Colors.green[700]!, // Dark green color
             ),
@@ -76,7 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.menu_book,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LegalGuidesScreen(tableName: 'legal_guides', updateFavoriteState: updateFavoriteState, favoriteStates: favoriteStates)),
+                MaterialPageRoute(
+                    builder: (context) => LegalGuidesScreen(
+                        tableName: 'legal_guides',
+                        updateFavoriteState: updateFavoriteState,
+                        favoriteStates: favoriteStates)),
               ),
               backgroundColor: Colors.orange[700]!, // Dark orange color
             ),
@@ -94,7 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.favorite,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen(favoriteStates: favoriteStates)),
+                MaterialPageRoute(
+                    builder: (context) => FavoritesScreen(favoriteStates: favoriteStates)),
               ),
               backgroundColor: Colors.purple[700]!, // Dark purple color
             ),
@@ -102,10 +147,19 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Admin View',
               icon: Icons.settings,
               onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminViewScreen()),
-              ),
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminViewScreen())),
               backgroundColor: Colors.grey[700]!, // Dark grey color
+            ),
+            HomeCard(
+                title: 'Auth',
+                icon: Icons.account_circle, // Choose an appropriate icon
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AuthScreen()),
+                ),
+                backgroundColor: Colors.brown[700]!,
+                textColor: Colors.white
             ),
           ],
         ),

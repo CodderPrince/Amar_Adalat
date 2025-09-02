@@ -6,13 +6,15 @@ class HomeCard extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final Color backgroundColor; // Added background color
+  final Color textColor; // Added text color
 
   const HomeCard({
     Key? key,
     required this.title,
     required this.icon,
     required this.onTap,
-    required this.backgroundColor, // Added background color
+    required this.backgroundColor,
+    this.textColor = Colors.white, // Default to white text
   }) : super(key: key);
 
   @override
@@ -27,12 +29,12 @@ class HomeCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 48, color: Colors.white),
+              Icon(icon, size: 48, color: textColor), // Use textColor
               SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor), // Use textColor
               ),
             ],
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../screens/detail_screen.dart'; // Import DetailScreen
+import '../screens/detail_screen.dart';
 import 'dart:math';
 
 class SupabaseListScreen extends StatefulWidget {
@@ -119,12 +119,17 @@ class _SupabaseListScreenState extends State<SupabaseListScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
+              style: TextStyle(color: Colors.white),//Set text color to white
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, color: Colors.white,),//Set search icon color to white
                 hintText: 'Search ${widget.appBarTitle}',
+                hintStyle: TextStyle(color: Colors.white70),//Set hint text color to white
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none, // Remove border
                 ),
+                filled: true,
+                fillColor: Colors.brown,
               ),
               onChanged: (val) {
                 setState(() {

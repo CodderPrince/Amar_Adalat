@@ -115,7 +115,7 @@ Our user-centric design ensures that vital legal information is easy to navigate
 ---
 
 ## 📥 APK Download
-👉 [Download Amar Adalat APK (GitHub)](YOUR_DOWNLOAD_LINK_HERE)  
+👉 [Download Amar Adalat APK (GitHub)]https://github.com/CodderPrince/Amar_Adalat/blob/master/APK/Amar_Adalat.apk
 
 ---
 
